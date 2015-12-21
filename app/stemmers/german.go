@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	fmt.Println(GenerateStem("unabhangig"))
+	fmt.Println(GenerateStem("aufeinander"))
 }
 
 // Implements algorithm described here:
@@ -86,8 +86,12 @@ func trimSuffixStep1(letters []rune, r1 int) []rune {
 		"c": getLongestSuffix(letters, groupC),
 	}
 
+
 	// Now, get the min position (meaning, longest suffix)
-	group := findMinValue(positions, len(letters))
+	group := findMinPosition(positions, len(letters))
+
+	if (group == "") { return letters }
+
 	if (group == "a" && positions["a"] >= r1) {
 		return letters[:positions["a"]]
 	}
@@ -110,10 +114,10 @@ func trimSuffixStep1(letters []rune, r1 int) []rune {
 	return letters
 }
 
-func findMinValue(positions map[string]int, min int) (group string) {
+func findMinPosition(positions map[string]int, min int) (group string) {
 	group = ""
 	for key, value := range positions {
-		if (value < min) {
+		if (value < min && value != -1) {
 			min = value
 			group = key
 		}
@@ -130,7 +134,9 @@ func trimSuffixStep2(letters []rune, r1 int) []rune {
 		"b": getLongestSuffix(letters, groupB),
 	}
 
-	group := findMinValue(positions, len(letters))
+	group := findMinPosition(positions, len(letters))
+
+	if (group == "") { return letters }
 
 	if group == "a" && positions["a"] >= r1 {
 		return letters[:positions["a"]]
@@ -158,7 +164,9 @@ func trimDSuffix(letters []rune, r1 int, r2 int) []rune {
 		"d": getLongestSuffix(letters, groupD),
 	}
 
-	group := findMinValue(positions, len(letters))
+	group := findMinPosition(positions, len(letters))
+
+	if (group == "") { return letters }
 
 	if (group == "a" && positions["a"] >= r2) {
 		trimmed := letters[:positions["a"]]
@@ -203,10 +211,17 @@ func trimDSuffix(letters []rune, r1 int, r2 int) []rune {
 // Should check for all of them, and return the largest number
 // from an array of ints
 func getLongestSuffix(letters []rune, group []string) int {
+
 	pos := -1
-	for i := 0; pos != -1 && i < len(group); i++ {
+	for i := 0; i < len(group); i++ {
 		suffix := []rune(group[i])
-		pos = getSuffixPosition(letters, suffix)
+		suffixPos := getSuffixPosition(letters, suffix)
+
+		// If its the first found suffix, or it's longer than the
+		// previous, overwrite
+		if (pos == -1 && suffixPos != -1) || (pos != -1 && suffixPos < pos) {
+			pos = suffixPos
+		}
 	}
 	return pos
 }
