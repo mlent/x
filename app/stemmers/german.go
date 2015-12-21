@@ -1,9 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"strings"
 	"unicode"
-	"fmt"
 )
 
 func main() {
@@ -40,7 +40,7 @@ func replaceSZed(word string) string {
 
 // Step 2
 func capitalizeYsUs(letters []rune) []rune {
-	for i, max := 1, len(letters) - 1; i < max; i++ {
+	for i, max := 1, len(letters)-1; i < max; i++ {
 		if (letters[i] == 'y' || letters[i] == 'u') &&
 			isBetweenVowels(i, letters) {
 			letters[i] = unicode.ToUpper(letters[i])
@@ -60,7 +60,7 @@ func getRegions(letters []rune) (int, int) {
 // R1 is the region after the first consonant following a vowel, or is the null
 // region at the end of the word if there is no such non-vowel
 func calculateRegion(letters []rune) int {
-	for i := 0; i < len(letters) - 1; i++ {
+	for i := 0; i < len(letters)-1; i++ {
 		if isVowel(letters[i]) && !isVowel(letters[i+1]) {
 			return i + 2
 		}
@@ -69,8 +69,12 @@ func calculateRegion(letters []rune) int {
 }
 
 func adjustR1(letters []rune, r1 int) int {
-	if r1 >= 3 { return r1 }
-	if len(letters) < 4 { return len(letters) }
+	if r1 >= 3 {
+		return r1
+	}
+	if len(letters) < 4 {
+		return len(letters)
+	}
 	return 3
 }
 
@@ -80,29 +84,29 @@ func trimSuffixStep1(letters []rune, r1 int) []rune {
 	groupB := []string{"en", "es", "e"}
 	groupC := []string{"s"}
 
-	positions := map[string] int {
+	positions := map[string]int{
 		"a": getLongestSuffix(letters, groupA),
 		"b": getLongestSuffix(letters, groupB),
 		"c": getLongestSuffix(letters, groupC),
 	}
 
-
 	// Now, get the min position (meaning, longest suffix)
 	group := findMinPosition(positions, len(letters))
 
-	if (group == "") { return letters }
+	if group == "" {
+		return letters
+	}
 
-	if (group == "a" && positions["a"] >= r1) {
+	if group == "a" && positions["a"] >= r1 {
 		return letters[:positions["a"]]
 	}
 
 	// If an ending in Group B should be trimmed, also delete the final
 	// "s" if the remaining stem ends in "niss"
-	if (group == "b" && positions["b"] >= r1) {
+	if group == "b" && positions["b"] >= r1 {
 		trimmed := letters[:positions["b"]]
-		if nissPos := getSuffixPosition(trimmed, []rune("niss"));
-			nissPos != -1 {
-			return trimmed[:len(trimmed) - 1]
+		if nissPos := getSuffixPosition(trimmed, []rune("niss")); nissPos != -1 {
+			return trimmed[:len(trimmed)-1]
 		}
 	}
 
@@ -117,26 +121,29 @@ func trimSuffixStep1(letters []rune, r1 int) []rune {
 func findMinPosition(positions map[string]int, min int) (group string) {
 	group = ""
 	for key, value := range positions {
-		if (value < min && value != -1) {
+		if value < min && value != -1 {
 			min = value
 			group = key
 		}
 	}
 	return
 }
+
 // Step 4:2
 func trimSuffixStep2(letters []rune, r1 int) []rune {
 	groupA := []string{"en", "er", "est"}
 	groupB := []string{"st"}
 
-	positions := map[string] int {
+	positions := map[string]int{
 		"a": getLongestSuffix(letters, groupA),
 		"b": getLongestSuffix(letters, groupB),
 	}
 
 	group := findMinPosition(positions, len(letters))
 
-	if (group == "") { return letters }
+	if group == "" {
+		return letters
+	}
 
 	if group == "a" && positions["a"] >= r1 {
 		return letters[:positions["a"]]
@@ -157,7 +164,7 @@ func trimDSuffix(letters []rune, r1 int, r2 int) []rune {
 	groupC := []string{"lich", "heit"}
 	groupD := []string{"keit"}
 
-	positions := map[string] int {
+	positions := map[string]int{
 		"a": getLongestSuffix(letters, groupA),
 		"b": getLongestSuffix(letters, groupB),
 		"c": getLongestSuffix(letters, groupC),
@@ -166,29 +173,29 @@ func trimDSuffix(letters []rune, r1 int, r2 int) []rune {
 
 	group := findMinPosition(positions, len(letters))
 
-	if (group == "") { return letters }
+	if group == "" {
+		return letters
+	}
 
-	if (group == "a" && positions["a"] >= r2) {
+	if group == "a" && positions["a"] >= r2 {
 		trimmed := letters[:positions["a"]]
-		if pos := getSuffixPosition(trimmed, []rune("ig"));
-			pos >= r2 && getSuffixPosition(trimmed, []rune("e")) == -1 {
-				return trimmed[:pos]
+		if pos := getSuffixPosition(trimmed, []rune("ig")); pos >= r2 && getSuffixPosition(trimmed, []rune("e")) == -1 {
+			return trimmed[:pos]
 		}
 	}
 
-	if (group == "b" && positions["b"] >= r2) {
-		if pos := getSuffixPosition(letters[:positions["b"]], []rune ("e"));
-			pos == -1 {
+	if group == "b" && positions["b"] >= r2 {
+		if pos := getSuffixPosition(letters[:positions["b"]], []rune("e")); pos == -1 {
 			return letters[:positions["b"]]
 		}
 	}
 
-	if (group == "c" && positions["c"] >= r2) {
+	if group == "c" && positions["c"] >= r2 {
 		trimmed := letters[:positions["b"]]
 		erPos := getSuffixPosition(trimmed, []rune("er"))
 		enPos := getSuffixPosition(trimmed, []rune("en"))
 		if (erPos != -1 && erPos >= r1) || (enPos != -1 && enPos >= r1) {
-			return trimmed[:len(trimmed) - 2]
+			return trimmed[:len(trimmed)-2]
 		}
 		return trimmed
 	}
@@ -227,7 +234,9 @@ func getLongestSuffix(letters []rune, group []string) int {
 }
 
 func getSuffixPosition(letters, suffix []rune) int {
-	if len(letters) < len(suffix) { return -1 }
+	if len(letters) < len(suffix) {
+		return -1
+	}
 
 	end := len(letters) - 1
 	for i := len(suffix) - 1; i >= 0; i-- {
@@ -238,7 +247,6 @@ func getSuffixPosition(letters, suffix []rune) int {
 	}
 	return len(letters) - len(suffix)
 }
-
 
 // UTILS
 
